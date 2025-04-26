@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infinite Quiz Challenge</title>
+    <title>Bharat Quiz Challenge</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
             color: white;
             display: flex;
             justify-content: center;
@@ -15,80 +15,78 @@
             min-height: 100vh;
             margin: 0;
         }
-        
         .container {
             width: 90%;
-            max-width: 600px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            max-width: 650px;
+            background: rgba(0, 0, 0, 0.7);
             border-radius: 15px;
             padding: 2rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
         }
-        
         h1 {
-            margin-top: 0;
-            color: #4cc9f0;
+            color: #f4d03f;
+            text-align: center;
+            margin-bottom: 1.5rem;
         }
-        
         .question-box {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             margin: 1.5rem 0;
             min-height: 4rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
         }
-        
         .options-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
             margin: 2rem 0;
         }
-        
         .option-btn {
-            padding: 1rem;
-            border: none;
+            padding: 0.8rem;
+            border: 2px solid #3498db;
             border-radius: 8px;
-            background: rgba(76, 201, 240, 0.7);
+            background: transparent;
             color: white;
-            font-size: 1.1rem;
+            font-size: 1rem;
             cursor: pointer;
             transition: all 0.3s;
         }
-        
         .option-btn:hover {
-            background: rgba(76, 201, 240, 1);
-            transform: translateY(-3px);
+            background: #3498db;
+            transform: scale(1.02);
         }
-        
         .score-display {
             font-size: 1.3rem;
-            margin: 1.5rem 0;
-            color: #f72585;
-            font-weight: bold;
+            color: #2ecc71;
+            text-align: center;
+            margin: 1rem 0;
         }
-        
         .feedback {
             height: 1.5rem;
-            margin: 1rem 0;
+            text-align: center;
             font-weight: bold;
+            margin: 1rem 0;
         }
-        
         .correct {
-            color: #4ad66d;
+            color: #2ecc71;
         }
-        
         .incorrect {
-            color: #f72585;
+            color: #e74c3c;
+        }
+        .category-tag {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: #9b59b6;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 1rem;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Infinite Quiz Challenge</h1>
+        <h1>🇮🇳 Bharat Quiz Challenge</h1>
         <div class="score-display">Score: <span id="score">0</span></div>
         <div class="question-box" id="question"></div>
         <div class="options-container" id="options"></div>
@@ -96,192 +94,233 @@
     </div>
 
     <script>
-        // ===== REVAMPED QUESTION GENERATOR =====
         class QuizEngine {
             constructor() {
-                this.usedQuestionHashes = new Set();
-                this.mathOperations = ['+', '-', '*', '/'];
-                this.scienceQuestions = [
-                    {
-                        question: "Which planet is closest to the Sun?",
-                        options: ["Venus", "Mars", "Mercury", "Earth"],
-                        answer: "Mercury"
-                    },
-                    {
-                        question: "What is the chemical formula for water?",
-                        options: ["H₂O", "CO₂", "NaCl", "O₂"],
-                        answer: "H₂O"
-                    },
-                    {
-                        question: "What gas do plants absorb from the atmosphere?",
-                        options: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"],
-                        answer: "Carbon Dioxide"
-                    }
-                ];
-            }
-
-            generateMathQuestion(difficulty) {
-                const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-                
-                let num1, num2, opIndex;
-                
-                if (difficulty < 3) {
-                    num1 = getRandomInt(1, 10);
-                    num2 = getRandomInt(1, 10);
-                    opIndex = getRandomInt(0, 1); // Only + and -
-                } else if (difficulty < 7) {
-                    num1 = getRandomInt(5, 20);
-                    num2 = getRandomInt(5, 20);
-                    opIndex = getRandomInt(0, 2); // +, -, *
-                } else {
-                    num1 = getRandomInt(10, 50);
-                    num2 = getRandomInt(10, 50);
-                    opIndex = getRandomInt(0, 3); // All operations
-                }
-
-                const op = this.mathOperations[opIndex];
-                let question, answer;
-
-                switch(op) {
-                    case '+':
-                        question = num1 + " + " + num2;
-                        answer = num1 + num2;
-                        break;
-                    case '-':
-                        question = num1 + " - " + num2;
-                        answer = num1 - num2;
-                        break;
-                    case '*':
-                        question = num1 + " × " + num2;
-                        answer = num1 * num2;
-                        break;
-                    case '/':
-                        // Ensure clean division
-                        answer = getRandomInt(1, 10);
-                        num2 = getRandomInt(1, 10);
-                        num1 = answer * num2;
-                        question = num1 + " ÷ " + num2;
-                        break;
-                }
-
-                // Generate plausible wrong answers
-                const options = new Set([answer]);
-                while (options.size < 4) {
-                    const variation = getRandomInt(-10, 10);
-                    const wrongAnswer = answer + variation;
-                    if (wrongAnswer !== answer && wrongAnswer > 0) {
-                        options.add(wrongAnswer);
-                    }
-                }
-
-                return {
-                    question: "What is " + question + "?",
-                    options: Array.from(options).sort(() => Math.random() - 0.5),
-                    answer: answer,
-                    category: 'math'
+                this.usedQuestions = new Set();
+                this.categories = {
+                    math: this.generateMathQuestion,
+                    physics: this.generatePhysicsQuestion,
+                    chemistry: this.generateChemistryQuestion,
+                    history: this.generateHistoryQuestion,
+                    culture: this.generateCultureQuestion
                 };
             }
 
-            getRandomScienceQuestion() {
-                return this.scienceQuestions[
-                    Math.floor(Math.random() * this.scienceQuestions.length)
-                ];
+            // ===== QUESTION GENERATORS =====
+            generateMathQuestion(difficulty) {
+                let num1, num2, op;
+                if (difficulty < 5) {
+                    num1 = Math.floor(Math.random() * 15) + 1;
+                    num2 = Math.floor(Math.random() * 15) + 1;
+                    op = ['+', '-'][Math.floor(Math.random() * 2)];
+                } else if (difficulty < 10) {
+                    num1 = Math.floor(Math.random() * 30) + 1;
+                    num2 = Math.floor(Math.random() * 30) + 1;
+                    op = ['+', '-', '*'][Math.floor(Math.random() * 3)];
+                } else {
+                    num1 = Math.floor(Math.random() * 50) + 1;
+                    num2 = Math.floor(Math.random() * 50) + 1;
+                    op = ['+', '-', '*', '/'][Math.floor(Math.random() * 4)];
+                }
+
+                let question, answer;
+                switch(op) {
+                    case '+': 
+                        question = `${num1} + ${num2}`; 
+                        answer = num1 + num2; 
+                        break;
+                    case '-': 
+                        question = `${num1} - ${num2}`; 
+                        answer = num1 - num2; 
+                        break;
+                    case '*': 
+                        question = `${num1} × ${num2}`; 
+                        answer = num1 * num2; 
+                        break;
+                    case '/':
+                        answer = Math.floor(Math.random() * 10) + 1;
+                        num2 = Math.floor(Math.random() * 10) + 1;
+                        num1 = answer * num2;
+                        question = `${num1} ÷ ${num2}`;
+                        break;
+                }
+
+                return this.formatQuestion(
+                    `What is ${question}?`,
+                    answer,
+                    ['math', 'Math']
+                );
             }
 
-            generateQuestion(difficulty) {
-                let question;
-                let attempts = 0;
-                const maxAttempts = 20;
+            generatePhysicsQuestion(difficulty) {
+                const questions = [
+                    { q: "What is the unit of force?", a: "Newton", opts: ["Joule", "Newton", "Watt", "Pascal"] },
+                    { q: "Which law states 'For every action there is an equal and opposite reaction'?", 
+                      a: "Newton's Third Law", opts: ["Newton's First Law", "Newton's Second Law", "Newton's Third Law", "Law of Gravitation"] },
+                    { q: "What is the speed of light in vacuum?", 
+                      a: "3 × 10⁸ m/s", opts: ["3 × 10⁵ m/s", "3 × 10⁸ m/s", "3 × 10¹⁰ m/s", "3 × 10³ m/s"] },
+                    { q: "Which device converts mechanical energy to electrical energy?", 
+                      a: "Generator", opts: ["Motor", "Transformer", "Generator", "Rectifier"] }
+                ];
+                return this.pickQuestion(questions, ['physics', 'Physics']);
+            }
+
+            generateChemistryQuestion(difficulty) {
+                const questions = [
+                    { q: "What is the chemical symbol for Gold?", a: "Au", opts: ["Ag", "Au", "Gd", "Go"] },
+                    { q: "What is the pH value of pure water?", a: "7", opts: ["5", "6", "7", "8"] },
+                    { q: "Which gas is most abundant in Earth's atmosphere?", 
+                      a: "Nitrogen", opts: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"] },
+                    { q: "What is the main component of vinegar?", 
+                      a: "Acetic Acid", opts: ["Citric Acid", "Hydrochloric Acid", "Acetic Acid", "Sulfuric Acid"] }
+                ];
+                return this.pickQuestion(questions, ['chemistry', 'Chemistry']);
+            }
+
+            generateHistoryQuestion(difficulty) {
+                const questions = [
+                    { q: "Who was the first Prime Minister of India?", 
+                      a: "Jawaharlal Nehru", opts: ["Mahatma Gandhi", "Jawaharlal Nehru", "Indira Gandhi", "Sardar Patel"] },
+                    { q: "In which year did India gain independence?", 
+                      a: "1947", opts: ["1945", "1947", "1950", "1935"] },
+                    { q: "Where did Mahatma Gandhi launch the Civil Disobedience Movement?", 
+                      a: "Dandi", opts: ["Dandi", "Champaran", "Bardoli", "Ahmedabad"] },
+                    { q: "Who built the Taj Mahal?", 
+                      a: "Shah Jahan", opts: ["Akbar", "Shah Jahan", "Aurangzeb", "Jahangir"] }
+                ];
+                return this.pickQuestion(questions, ['history', 'Indian History']);
+            }
+
+            generateCultureQuestion(difficulty) {
+                const questions = [
+                    { q: "Which classical dance form originated in Kerala?", 
+                      a: "Kathakali", opts: ["Bharatanatyam", "Kathak", "Kathakali", "Odissi"] },
+                    { q: "Which festival is known as the 'Festival of Lights'?", 
+                      a: "Diwali", opts: ["Holi", "Diwali", "Dussehra", "Navratri"] },
+                    { q: "Which Indian epic narrates the story of Lord Rama?", 
+                      a: "Ramayana", opts: ["Mahabharata", "Ramayana", "Bhagavad Gita", "Vedas"] },
+                    { q: "Which city is famous for the Sun Temple?", 
+                      a: "Konark", opts: ["Khajuraho", "Konark", "Madurai", "Varanasi"] }
+                ];
+                return this.pickQuestion(questions, ['culture', 'Indian Culture']);
+            }
+
+            // ===== HELPER METHODS =====
+            pickQuestion(questions, [category, displayName]) {
+                const q = questions[Math.floor(Math.random() * questions.length)];
+                return this.formatQuestion(q.q, q.a, [category, displayName], q.opts);
+            }
+
+            formatQuestion(question, answer, [category, displayName], customOptions) {
+                // Generate options if not provided
+                const options = customOptions || this.generateOptions(answer);
                 
-                do {
-                    attempts++;
-                    // Weighted random selection - more math questions as difficulty increases
-                    const useMath = Math.random() < (0.5 + difficulty * 0.05);
-                    question = useMath 
-                        ? this.generateMathQuestion(difficulty) 
-                        : this.getRandomScienceQuestion();
-                    
-                    // Create a unique hash for the question
-                    const questionHash = JSON.stringify({
-                        q: question.question,
-                        a: question.answer
-                    });
-                    
-                    // Accept if we haven't seen it before (or very rarely if we have)
-                    if (!this.usedQuestionHashes.has(questionHash)) {
-                        this.usedQuestionHashes.add(questionHash);
-                        return question;
+                return {
+                    question: question + ` <span class="category-tag">${displayName}</span>`,
+                    options: options.sort(() => Math.random() - 0.5),
+                    answer: answer,
+                    category: category
+                };
+            }
+
+            generateOptions(correctAnswer) {
+                const options = [correctAnswer];
+                while (options.length < 4) {
+                    let randomOption;
+                    if (typeof correctAnswer === 'number') {
+                        randomOption = correctAnswer + Math.floor(Math.random() * 10) - 5;
+                        if (randomOption < 1) randomOption = 1;
+                    } else {
+                        // For text answers, provide plausible alternatives
+                        randomOption = "Option " + (options.length + 1);
                     }
-                    
-                } while (attempts < maxAttempts);
+                    if (!options.includes(randomOption)) options.push(randomOption);
+                }
+                return options;
+            }
+
+            // ===== MAIN QUESTION GENERATOR =====
+            generateQuestion(difficulty) {
+                // Weight categories based on difficulty
+                let category;
+                const rand = Math.random();
                 
-                // Fallback if we somehow can't generate a new question
-                return this.generateMathQuestion(1);
+                if (difficulty < 3) {
+                    category = rand < 0.6 ? 'math' : 
+                              rand < 0.8 ? 'history' : 'culture';
+                } else if (difficulty < 7) {
+                    category = rand < 0.4 ? 'math' : 
+                              rand < 0.6 ? 'physics' : 
+                              rand < 0.8 ? 'history' : 'culture';
+                } else {
+                    category = rand < 0.3 ? 'math' : 
+                              rand < 0.5 ? 'physics' : 
+                              rand < 0.7 ? 'chemistry' : 
+                              rand < 0.9 ? 'history' : 'culture';
+                }
+
+                const question = this.categories[category](difficulty);
+                
+                // Ensure unique questions
+                if (this.usedQuestions.has(question.question)) {
+                    return this.generateQuestion(difficulty); // Try again
+                }
+                
+                this.usedQuestions.add(question.question);
+                return question;
             }
         }
 
         // ===== GAME CONTROLLER =====
         class GameController {
             constructor() {
-                this.quizEngine = new QuizEngine();
+                this.engine = new QuizEngine();
                 this.score = 0;
-                this.currentQuestion = null;
-                
                 this.elements = {
                     question: document.getElementById('question'),
                     options: document.getElementById('options'),
                     score: document.getElementById('score'),
                     feedback: document.getElementById('feedback')
                 };
-                
-                this.initialize();
+                this.startGame();
             }
-            
-            initialize() {
-                this.loadNewQuestion();
+
+            startGame() {
+                this.loadQuestion();
             }
-            
-            loadNewQuestion() {
-                this.currentQuestion = this.quizEngine.generateQuestion(this.score);
-                this.displayQuestion();
-            }
-            
-            displayQuestion() {
-                this.elements.question.textContent = this.currentQuestion.question;
+
+            loadQuestion() {
+                const question = this.engine.generateQuestion(this.score);
+                this.elements.question.innerHTML = question.question;
                 this.elements.options.innerHTML = '';
-                this.elements.feedback.textContent = '';
-                this.elements.feedback.className = 'feedback';
                 
-                this.currentQuestion.options.forEach(option => {
-                    const button = document.createElement('button');
-                    button.className = 'option-btn';
-                    button.textContent = option;
-                    button.addEventListener('click', () => this.handleAnswer(option));
-                    this.elements.options.appendChild(button);
+                question.options.forEach(option => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    btn.textContent = option;
+                    btn.addEventListener('click', () => this.checkAnswer(option, question.answer));
+                    this.elements.options.appendChild(btn);
                 });
             }
-            
-            handleAnswer(selectedAnswer) {
-                const isCorrect = selectedAnswer == this.currentQuestion.answer;
-                
-                if (isCorrect) {
+
+            checkAnswer(selected, correct) {
+                if (selected == correct) {
                     this.score++;
                     this.elements.score.textContent = this.score;
                     this.elements.feedback.textContent = '✓ Correct!';
                     this.elements.feedback.className = 'feedback correct';
-                    setTimeout(() => this.loadNewQuestion(), 800);
+                    setTimeout(() => this.loadQuestion(), 800);
                 } else {
-                    this.elements.feedback.textContent = 
-                        '✗ Wrong! The answer was ' + this.currentQuestion.answer;
+                    this.elements.feedback.textContent = `✗ Wrong! Correct answer: ${correct}`;
                     this.elements.feedback.className = 'feedback incorrect';
                     this.score = 0;
                     this.elements.score.textContent = '0';
-                    setTimeout(() => this.loadNewQuestion(), 1500);
+                    setTimeout(() => this.loadQuestion(), 1500);
                 }
             }
         }
 
-        // Start the game when page loads
+        // Start the game
         new GameController();
     </script>
 </body>
