@@ -5,143 +5,161 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bharat Quiz Challenge</title>
     <style>
-        /* [Previous CSS remains exactly the same] */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 90%;
+            max-width: 650px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            color: #f4d03f;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .question-box {
+            font-size: 1.4rem;
+            margin: 1.5rem 0;
+            min-height: 4rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .option-btn {
+            padding: 0.8rem;
+            border: 2px solid #3498db;
+            border-radius: 8px;
+            background: transparent;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .option-btn:hover {
+            background: #3498db;
+            transform: scale(1.02);
+        }
+        .score-display {
+            font-size: 1.3rem;
+            color: #2ecc71;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        .feedback {
+            height: 1.5rem;
+            text-align: center;
+            font-weight: bold;
+            margin: 1rem 0;
+        }
+        .correct {
+            color: #2ecc71;
+        }
+        .incorrect {
+            color: #e74c3c;
+        }
+        .category-tag {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: #9b59b6;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 1rem;
+        }
+        .timer-container {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+        .timer-bar {
+            height: 100%;
+            background: #f4d03f;
+            width: 100%;
+            transition: width 1s linear;
+        }
+        .timer-text {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 0.5rem;
+        }
+        .question-counter {
+            text-align: center;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #bdc3c7;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🇮🇳 Bharat Quiz Challenge</h1>
-        <div class="question-counter">Question: <span id="question-count">1</span>/∞</div>
+        <div class="question-counter">Question: <span id="question-count">1</span></div>
         <div class="score-display">Score: <span id="score">0</span></div>
         <div class="timer-container">
             <div class="timer-bar" id="timer-bar"></div>
         </div>
         <div class="timer-text" id="timer-text">30s</div>
-        <div class="question-box" id="question"></div>
+        <div class="question-box" id="question">Loading first question...</div>
         <div class="options-container" id="options"></div>
         <div class="feedback" id="feedback"></div>
     </div>
 
     <script>
-        class QuizEngine {
+        // ===== QUESTION DATABASE =====
+        const questionDatabase = {
+            math: [
+                { q: "What is 5 + 7?", a: 12, opts: [10, 11, 12, 13] },
+                { q: "What is 10 - 4?", a: 6, opts: [5, 6, 7, 8] },
+                { q: "What is 3 × 4?", a: 12, opts: [9, 12, 15, 18] },
+                { q: "What is 20 ÷ 5?", a: 4, opts: [3, 4, 5, 6] },
+                { q: "What is 15 + 8?", a: 23, opts: [21, 22, 23, 24] }
+            ],
+            physics: [
+                { q: "What is the unit of force?", a: "Newton", opts: ["Joule", "Newton", "Watt", "Pascal"] },
+                { q: "What is the speed of light?", a: "3×10⁸ m/s", opts: ["3×10⁵ m/s", "3×10⁸ m/s", "3×10¹⁰ m/s", "299,792 km/s"] }
+            ],
+            chemistry: [
+                { q: "What is H₂O?", a: "Water", opts: ["Salt", "Water", "Oxygen", "Hydrogen"] },
+                { q: "What is the chemical symbol for Gold?", a: "Au", opts: ["Ag", "Au", "Gd", "Go"] }
+            ],
+            history: [
+                { q: "Who was India's first PM?", a: "Nehru", opts: ["Gandhi", "Nehru", "Patel", "Bose"] },
+                { q: "When did India gain independence?", a: "1947", opts: ["1945", "1947", "1950", "1935"] }
+            ],
+            culture: [
+                { q: "Which dance originated in Kerala?", a: "Kathakali", opts: ["Bharatanatyam", "Kathak", "Kathakali", "Odissi"] },
+                { q: "Which festival is 'Festival of Lights'?", a: "Diwali", opts: ["Holi", "Diwali", "Dussehra", "Navratri"] }
+            ]
+        };
+
+        // ===== GAME ENGINE =====
+        class GameEngine {
             constructor() {
-                this.usedQuestions = new Set();
-                this.allQuestions = this.initializeQuestions();
-            }
-
-            initializeQuestions() {
-                // Pre-defined questions to ensure we always have content
-                return [
-                    // Math Questions (30)
-                    ...Array.from({length: 10}, (_,i) => this.createMathQuestion('+', 1, 10)),
-                    ...Array.from({length: 10}, (_,i) => this.createMathQuestion('-', 1, 10)),
-                    ...Array.from({length: 5}, (_,i) => this.createMathQuestion('*', 1, 5)),
-                    ...Array.from({length: 5}, (_,i) => this.createMathQuestion('/', 1, 5)),
-                    
-                    // Physics (10)
-                    { q: "What is the unit of force?", a: "Newton", opts: ["Joule", "Newton", "Watt", "Pascal"], cat: "physics" },
-                    { q: "Which law states 'For every action there is an equal and opposite reaction'?", 
-                      a: "Newton's Third Law", opts: ["Newton's First Law", "Newton's Second Law", "Newton's Third Law", "Law of Gravitation"], cat: "physics" },
-                    
-                    // Chemistry (10)
-                    { q: "What is the chemical symbol for Gold?", a: "Au", opts: ["Ag", "Au", "Gd", "Go"], cat: "chemistry" },
-                    { q: "What is the pH value of pure water?", a: "7", opts: ["5", "6", "7", "8"], cat: "chemistry" },
-                    
-                    // History (20)
-                    { q: "Who was the first Prime Minister of India?", 
-                      a: "Jawaharlal Nehru", opts: ["Mahatma Gandhi", "Jawaharlal Nehru", "Indira Gandhi", "Sardar Patel"], cat: "history" },
-                    { q: "In which year did India gain independence?", 
-                      a: "1947", opts: ["1945", "1947", "1950", "1935"], cat: "history" },
-                    
-                    // Culture (20)
-                    { q: "Which classical dance form originated in Kerala?", 
-                      a: "Kathakali", opts: ["Bharatanatyam", "Kathak", "Kathakali", "Odissi"], cat: "culture" },
-                    { q: "Which festival is known as the 'Festival of Lights'?", 
-                      a: "Diwali", opts: ["Holi", "Diwali", "Dussehra", "Navratri"], cat: "culture" }
-                ];
-            }
-
-            createMathQuestion(op, min, max) {
-                let num1 = Math.floor(Math.random() * max) + min;
-                let num2 = Math.floor(Math.random() * max) + min;
-                let answer, question;
-
-                if (op === '/') {
-                    answer = Math.floor(Math.random() * 5) + 1;
-                    num2 = Math.floor(Math.random() * 5) + 1;
-                    num1 = answer * num2;
-                    question = `${num1} ÷ ${num2}`;
-                } else {
-                    question = `${num1} ${op === '*' ? '×' : op} ${num2}`;
-                    answer = eval(num1 + op + num2); // Safe here because we control the inputs
-                }
-
-                return {
-                    q: `What is ${question}?`,
-                    a: answer,
-                    opts: this.generateMathOptions(answer, op),
-                    cat: "math"
-                };
-            }
-
-            generateMathOptions(answer, op) {
-                const options = [answer];
-                while (options.length < 4) {
-                    let option;
-                    if (op === '/' || op === '*') {
-                        option = answer + (Math.floor(Math.random() * 5) - 2;
-                    } else {
-                        option = answer + (Math.floor(Math.random() * 10) - 5;
-                    }
-                    if (option !== answer && !options.includes(option) && option > 0) {
-                        options.push(option);
-                    }
-                }
-                return options.sort(() => Math.random() - 0.5);
-            }
-
-            getRandomQuestion() {
-                // If we've used all questions, reset (shouldn't happen with infinite mode)
-                if (this.usedQuestions.size >= this.allQuestions.length) {
-                    this.usedQuestions.clear();
-                }
-
-                let availableQuestions = this.allQuestions.filter(q => !this.usedQuestions.has(q.q));
-                if (availableQuestions.length === 0) {
-                    availableQuestions = this.allQuestions;
-                    this.usedQuestions.clear();
-                }
-
-                const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-                const question = availableQuestions[randomIndex];
-                this.usedQuestions.add(question.q);
-                return question;
-            }
-
-            generateQuestion(difficulty) {
-                const baseQuestion = this.getRandomQuestion();
-                
-                // For math questions, increase difficulty based on score
-                if (baseQuestion.cat === 'math') {
-                    return this.createMathQuestion(
-                        ['+', '-', '*', '/'][Math.min(Math.floor(difficulty/5), 3)],
-                        1 + difficulty,
-                        10 + difficulty * 2
-                    );
-                }
-                
-                return baseQuestion;
-            }
-        }
-
-        class GameController {
-            constructor() {
-                this.engine = new QuizEngine();
                 this.score = 0;
                 this.questionCount = 1;
                 this.timeLeft = 30;
                 this.timer = null;
-
+                this.currentQuestion = null;
+                
+                // DOM Elements
                 this.elements = {
                     question: document.getElementById('question'),
                     options: document.getElementById('options'),
@@ -151,51 +169,77 @@
                     timerText: document.getElementById('timer-text'),
                     questionCount: document.getElementById('question-count')
                 };
-
+                
+                this.startGame();
+            }
+            
+            startGame() {
                 this.loadQuestion();
             }
-
+            
             loadQuestion() {
+                // Clear previous timer
                 clearInterval(this.timer);
                 
+                // Set timer based on question count
                 this.timeLeft = this.questionCount <= 20 ? 30 : 10;
                 this.updateTimerDisplay();
                 
-                const question = this.engine.generateQuestion(this.score);
-                this.currentQuestion = question;
+                // Select random category
+                const categories = Object.keys(questionDatabase);
+                const randomCategory = categories[Math.floor(Math.random() * categories.length)];
+                const questions = questionDatabase[randomCategory];
                 
-                this.elements.question.innerHTML = question.q + ` <span class="category-tag">${question.cat.toUpperCase()}</span>`;
-                this.elements.questionCount.textContent = this.questionCount;
+                // Get random question from category
+                this.currentQuestion = questions[Math.floor(Math.random() * questions.length)];
+                this.displayQuestion();
+                
+                // Start timer
+                this.timer = setInterval(() => this.updateTimer(), 1000);
+            }
+            
+            displayQuestion() {
+                this.elements.question.innerHTML = 
+                    this.currentQuestion.q + 
+                    `<span class="category-tag">${this.currentQuestion.cat || 'General'}</span>`;
+                
                 this.elements.options.innerHTML = '';
+                this.elements.questionCount.textContent = this.questionCount;
                 
-                question.opts.forEach(option => {
+                // Shuffle options
+                const shuffledOptions = [...this.currentQuestion.opts].sort(() => Math.random() - 0.5);
+                
+                shuffledOptions.forEach(option => {
                     const btn = document.createElement('button');
                     btn.className = 'option-btn';
                     btn.textContent = option;
                     btn.addEventListener('click', () => this.checkAnswer(option));
                     this.elements.options.appendChild(btn);
                 });
-
-                this.timer = setInterval(() => {
-                    this.timeLeft--;
-                    this.updateTimerDisplay();
-                    
-                    if (this.timeLeft <= 0) {
-                        this.handleTimeout();
-                    }
-                }, 1000);
             }
-
+            
+            updateTimer() {
+                this.timeLeft--;
+                this.updateTimerDisplay();
+                
+                if (this.timeLeft <= 0) {
+                    this.handleTimeout();
+                }
+            }
+            
             updateTimerDisplay() {
                 const maxTime = this.questionCount <= 20 ? 30 : 10;
-                this.elements.timerBar.style.width = `${(this.timeLeft/maxTime)*100}%`;
+                const percentLeft = (this.timeLeft / maxTime) * 100;
+                
+                this.elements.timerBar.style.width = `${percentLeft}%`;
                 this.elements.timerText.textContent = `${this.timeLeft}s`;
                 this.elements.timerBar.style.background = this.timeLeft <= 5 ? '#e74c3c' : '#f4d03f';
             }
-
-            checkAnswer(selected) {
+            
+            checkAnswer(selectedAnswer) {
                 clearInterval(this.timer);
-                const isCorrect = selected == this.currentQuestion.a;
+                
+                const isCorrect = selectedAnswer == this.currentQuestion.a;
                 
                 if (isCorrect) {
                     this.score++;
@@ -209,22 +253,26 @@
                 
                 this.elements.score.textContent = this.score;
                 this.questionCount++;
-                setTimeout(() => this.loadQuestion(), 1000);
+                
+                // Load next question after delay
+                setTimeout(() => this.loadQuestion(), 1500);
             }
-
+            
             handleTimeout() {
                 clearInterval(this.timer);
                 this.score = Math.max(0, this.score - 1);
-                this.elements.score.textContent = this.score;
                 this.elements.feedback.textContent = "⏰ Time's up! -1";
                 this.elements.feedback.className = 'feedback incorrect';
+                this.elements.score.textContent = this.score;
                 this.questionCount++;
+                
+                // Load next question after delay
                 setTimeout(() => this.loadQuestion(), 1500);
             }
         }
 
-        // Start the game
-        new GameController();
+        // Start the game when page loads
+        window.onload = () => new GameEngine();
     </script>
 </body>
 </html>
