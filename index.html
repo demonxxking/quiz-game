@@ -82,12 +82,41 @@
             font-size: 0.8rem;
             margin-left: 1rem;
         }
+        .timer-container {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+        .timer-bar {
+            height: 100%;
+            background: #f4d03f;
+            width: 100%;
+            transition: width 1s linear;
+        }
+        .timer-text {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 0.5rem;
+        }
+        .question-counter {
+            text-align: center;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #bdc3c7;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🇮🇳 Bharat Quiz Challenge</h1>
+        <div class="question-counter">Question: <span id="question-count">1</span>/∞</div>
         <div class="score-display">Score: <span id="score">0</span></div>
+        <div class="timer-container">
+            <div class="timer-bar" id="timer-bar"></div>
+        </div>
+        <div class="timer-text" id="timer-text">30s</div>
         <div class="question-box" id="question"></div>
         <div class="options-container" id="options"></div>
         <div class="feedback" id="feedback"></div>
@@ -212,7 +241,6 @@
             }
 
             formatQuestion(question, answer, [category, displayName], customOptions) {
-                // Generate options if not provided
                 const options = customOptions || this.generateOptions(answer);
                 
                 return {
@@ -231,7 +259,6 @@
                         randomOption = correctAnswer + Math.floor(Math.random() * 10) - 5;
                         if (randomOption < 1) randomOption = 1;
                     } else {
-                        // For text answers, provide plausible alternatives
                         randomOption = "Option " + (options.length + 1);
                     }
                     if (!options.includes(randomOption)) options.push(randomOption);
@@ -239,9 +266,7 @@
                 return options;
             }
 
-            // ===== MAIN QUESTION GENERATOR =====
             generateQuestion(difficulty) {
-                // Weight categories based on difficulty
                 let category;
                 const rand = Math.random();
                 
@@ -261,9 +286,8 @@
 
                 const question = this.categories[category](difficulty);
                 
-                // Ensure unique questions
                 if (this.usedQuestions.has(question.question)) {
-                    return this.generateQuestion(difficulty); // Try again
+                    return this.generateQuestion(difficulty);
                 }
                 
                 this.usedQuestions.add(question.question);
@@ -276,21 +300,42 @@
             constructor() {
                 this.engine = new QuizEngine();
                 this.score = 0;
+                this.questionCount = 1;
+                this.timer = null;
+                this.timeLeft = 30;
+                this.isTimerRunning = false;
+
                 this.elements = {
                     question: document.getElementById('question'),
                     options: document.getElementById('options'),
                     score: document.getElementById('score'),
-                    feedback: document.getElementById('feedback')
+                    feedback: document.getElementById('feedback'),
+                    timerBar: document.getElementById('timer-bar'),
+                    timerText: document.getElementById('timer-text'),
+                    questionCount: document.getElementById('question-count')
                 };
+
                 this.startGame();
             }
 
             startGame() {
+                this.updateTimerDisplay();
                 this.loadQuestion();
             }
 
             loadQuestion() {
+                // Clear existing timer
+                if (this.isTimerRunning) {
+                    clearInterval(this.timer);
+                    this.isTimerRunning = false;
+                }
+
+                // Set timer duration based on question count
+                this.timeLeft = this.questionCount <= 20 ? 30 : 10;
+                this.elements.questionCount.textContent = this.questionCount;
+
                 const question = this.engine.generateQuestion(this.score);
+                this.currentQuestion = question;
                 this.elements.question.innerHTML = question.question;
                 this.elements.options.innerHTML = '';
                 
@@ -301,22 +346,65 @@
                     btn.addEventListener('click', () => this.checkAnswer(option, question.answer));
                     this.elements.options.appendChild(btn);
                 });
+
+                this.startTimer();
+            }
+
+            startTimer() {
+                this.isTimerRunning = true;
+                this.updateTimerDisplay();
+                
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    this.updateTimerDisplay();
+                    
+                    if (this.timeLeft <= 0) {
+                        clearInterval(this.timer);
+                        this.isTimerRunning = false;
+                        this.elements.feedback.textContent = "⏰ Time's up!";
+                        this.elements.feedback.className = 'feedback incorrect';
+                        this.score = Math.max(0, this.score - 1); // Penalty for timeout
+                        this.elements.score.textContent = this.score;
+                        setTimeout(() => this.nextQuestion(), 1500);
+                    }
+                }, 1000);
+            }
+
+            updateTimerDisplay() {
+                const percentage = (this.timeLeft / (this.questionCount <= 20 ? 30 : 10)) * 100;
+                this.elements.timerBar.style.width = `${percentage}%`;
+                this.elements.timerText.textContent = `${this.timeLeft}s`;
+                
+                // Change color when time is running out
+                if (this.timeLeft <= 5) {
+                    this.elements.timerBar.style.background = '#e74c3c';
+                } else {
+                    this.elements.timerBar.style.background = '#f4d03f';
+                }
             }
 
             checkAnswer(selected, correct) {
+                clearInterval(this.timer);
+                this.isTimerRunning = false;
+                
                 if (selected == correct) {
                     this.score++;
                     this.elements.score.textContent = this.score;
                     this.elements.feedback.textContent = '✓ Correct!';
                     this.elements.feedback.className = 'feedback correct';
-                    setTimeout(() => this.loadQuestion(), 800);
                 } else {
                     this.elements.feedback.textContent = `✗ Wrong! Correct answer: ${correct}`;
                     this.elements.feedback.className = 'feedback incorrect';
                     this.score = 0;
                     this.elements.score.textContent = '0';
-                    setTimeout(() => this.loadQuestion(), 1500);
                 }
+                
+                this.nextQuestion();
+            }
+
+            nextQuestion() {
+                this.questionCount++;
+                setTimeout(() => this.loadQuestion(), this.questionCount <= 20 ? 800 : 500);
             }
         }
 
