@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinite Quiz Challenge</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        
+        h1 {
+            margin-top: 0;
+            color: #4cc9f0;
+        }
+        
+        .question-box {
+            font-size: 1.5rem;
+            margin: 1.5rem 0;
+            min-height: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .option-btn {
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            background: rgba(76, 201, 240, 0.7);
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .option-btn:hover {
+            background: rgba(76, 201, 240, 1);
+            transform: translateY(-3px);
+        }
+        
+        .score-display {
+            font-size: 1.3rem;
+            margin: 1.5rem 0;
+            color: #f72585;
+            font-weight: bold;
+        }
+        
+        .feedback {
+            height: 1.5rem;
+            margin: 1rem 0;
+            font-weight: bold;
+        }
+        
+        .correct {
+            color: #4ad66d;
+        }
+        
+        .incorrect {
+            color: #f72585;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Infinite Quiz Challenge</h1>
+        <div class="score-display">Score: <span id="score">0</span></div>
+        <div class="question-box" id="question"></div>
+        <div class="options-container" id="options"></div>
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <script>
+        // ===== REVAMPED QUESTION GENERATOR =====
+        class QuizEngine {
+            constructor() {
+                this.usedQuestionHashes = new Set();
+                this.mathOperations = ['+', '-', '*', '/'];
+                this.scienceQuestions = [
+                    {
+                        question: "Which planet is closest to the Sun?",
+                        options: ["Venus", "Mars", "Mercury", "Earth"],
+                        answer: "Mercury"
+                    },
+                    {
+                        question: "What is the chemical formula for water?",
+                        options: ["H₂O", "CO₂", "NaCl", "O₂"],
+                        answer: "H₂O"
+                    },
+                    {
+                        question: "What gas do plants absorb from the atmosphere?",
+                        options: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"],
+                        answer: "Carbon Dioxide"
+                    }
+                ];
+            }
+
+            generateMathQuestion(difficulty) {
+                const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+                
+                let num1, num2, opIndex;
+                
+                if (difficulty < 3) {
+                    num1 = getRandomInt(1, 10);
+                    num2 = getRandomInt(1, 10);
+                    opIndex = getRandomInt(0, 1); // Only + and -
+                } else if (difficulty < 7) {
+                    num1 = getRandomInt(5, 20);
+                    num2 = getRandomInt(5, 20);
+                    opIndex = getRandomInt(0, 2); // +, -, *
+                } else {
+                    num1 = getRandomInt(10, 50);
+                    num2 = getRandomInt(10, 50);
+                    opIndex = getRandomInt(0, 3); // All operations
+                }
+
+                const op = this.mathOperations[opIndex];
+                let question, answer;
+
+                switch(op) {
+                    case '+':
+                        question = num1 + " + " + num2;
+                        answer = num1 + num2;
+                        break;
+                    case '-':
+                        question = num1 + " - " + num2;
+                        answer = num1 - num2;
+                        break;
+                    case '*':
+                        question = num1 + " × " + num2;
+                        answer = num1 * num2;
+                        break;
+                    case '/':
+                        // Ensure clean division
+                        answer = getRandomInt(1, 10);
+                        num2 = getRandomInt(1, 10);
+                        num1 = answer * num2;
+                        question = num1 + " ÷ " + num2;
+                        break;
+                }
+
+                // Generate plausible wrong answers
+                const options = new Set([answer]);
+                while (options.size < 4) {
+                    const variation = getRandomInt(-10, 10);
+                    const wrongAnswer = answer + variation;
+                    if (wrongAnswer !== answer && wrongAnswer > 0) {
+                        options.add(wrongAnswer);
+                    }
+                }
+
+                return {
+                    question: "What is " + question + "?",
+                    options: Array.from(options).sort(() => Math.random() - 0.5),
+                    answer: answer,
+                    category: 'math'
+                };
+            }
+
+            getRandomScienceQuestion() {
+                return this.scienceQuestions[
+                    Math.floor(Math.random() * this.scienceQuestions.length)
+                ];
+            }
+
+            generateQuestion(difficulty) {
+                let question;
+                let attempts = 0;
+                const maxAttempts = 20;
+                
+                do {
+                    attempts++;
+                    // Weighted random selection - more math questions as difficulty increases
+                    const useMath = Math.random() < (0.5 + difficulty * 0.05);
+                    question = useMath 
+                        ? this.generateMathQuestion(difficulty) 
+                        : this.getRandomScienceQuestion();
+                    
+                    // Create a unique hash for the question
+                    const questionHash = JSON.stringify({
+                        q: question.question,
+                        a: question.answer
+                    });
+                    
+                    // Accept if we haven't seen it before (or very rarely if we have)
+                    if (!this.usedQuestionHashes.has(questionHash)) {
+                        this.usedQuestionHashes.add(questionHash);
+                        return question;
+                    }
+                    
+                } while (attempts < maxAttempts);
+                
+                // Fallback if we somehow can't generate a new question
+                return this.generateMathQuestion(1);
+            }
+        }
+
+        // ===== GAME CONTROLLER =====
+        class GameController {
+            constructor() {
+                this.quizEngine = new QuizEngine();
+                this.score = 0;
+                this.currentQuestion = null;
+                
+                this.elements = {
+                    question: document.getElementById('question'),
+                    options: document.getElementById('options'),
+                    score: document.getElementById('score'),
+                    feedback: document.getElementById('feedback')
+                };
+                
+                this.initialize();
+            }
+            
+            initialize() {
+                this.loadNewQuestion();
+            }
+            
+            loadNewQuestion() {
+                this.currentQuestion = this.quizEngine.generateQuestion(this.score);
+                this.displayQuestion();
+            }
+            
+            displayQuestion() {
+                this.elements.question.textContent = this.currentQuestion.question;
+                this.elements.options.innerHTML = '';
+                this.elements.feedback.textContent = '';
+                this.elements.feedback.className = 'feedback';
+                
+                this.currentQuestion.options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.className = 'option-btn';
+                    button.textContent = option;
+                    button.addEventListener('click', () => this.handleAnswer(option));
+                    this.elements.options.appendChild(button);
+                });
+            }
+            
+            handleAnswer(selectedAnswer) {
+                const isCorrect = selectedAnswer == this.currentQuestion.answer;
+                
+                if (isCorrect) {
+                    this.score++;
+                    this.elements.score.textContent = this.score;
+                    this.elements.feedback.textContent = '✓ Correct!';
+                    this.elements.feedback.className = 'feedback correct';
+                    setTimeout(() => this.loadNewQuestion(), 800);
+                } else {
+                    this.elements.feedback.textContent = 
+                        '✗ Wrong! The answer was ' + this.currentQuestion.answer;
+                    this.elements.feedback.className = 'feedback incorrect';
+                    this.score = 0;
+                    this.elements.score.textContent = '0';
+                    setTimeout(() => this.loadNewQuestion(), 1500);
+                }
+            }
+        }
+
+        // Start the game when page loads
+        new GameController();
+    </script>
+</body>
+</html>
