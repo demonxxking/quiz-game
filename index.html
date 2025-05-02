@@ -1,30 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shubhkarman Loves Inayat?</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Love Question</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #ffecd2, #fcb69f);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+
+    .container {
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    h1 {
+      margin-bottom: 30px;
+      font-size: 1.8rem;
+    }
+
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 10px 25px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    #yes {
+      background-color: #4CAF50;
+      color: white;
+      position: relative;
+    }
+
+    #no {
+      background-color: #f44336;
+      color: white;
+    }
+
+    #yes:hover {
+      top: -30px;
+      left: 50px;
+    }
+
+    #message {
+      margin-top: 30px;
+      font-size: 1.4rem;
+      color: #333;
+      display: none;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.4rem;
+      }
+
+      button {
+        font-size: 1rem;
+        padding: 10px 20px;
+      }
+    }
+  </style>
 </head>
-<body style="font-family: Arial, sans-serif; background-color:           
-    <div style="width: 80%; margin: 40px auto; text-align: center; background-color: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
-        <h1>Does Shubhkarman love Inayat?</h1>
-        <div style="margin-top: 20px;">
-            <button id="yes-btn" style="width: 100px; height: 40px; margin: 0 20px; border: none; border-radius: 5px; background-color:                                                                                                          
-            <button id="no-btn" style="width: 100px; height: 40px; margin: 0 20px; border: none; border-radius: 5px; background-color: #4CAF50; color: #fff; cursor: pointer;">No</button>
-        </div>
-        <p id="response" style="margin-top: 20px; font-size: 24px; font-weight: bold;"></p>
+<body>
+  <div class="container">
+    <h1>Does Shubhkarman love Inayat?</h1>
+    <div class="buttons">
+      <button id="yes">Yes</button>
+      <button id="no">No</button>
     </div>
+    <div id="message">Very good!</div>
+  </div>
 
-    <script>
-        document.getElementById('no-btn').addEventListener('click', function() {
-            document.getElementById('response').innerText = 'Very Good!';
-        });
+  <script>
+    document.getElementById("no").addEventListener("click", function () {
+      document.getElementById("message").style.display = "block";
+    });
 
-        let yesBtn = document.getElementById('yes-btn');
-        yesBtn.addEventListener('mouseover', function() {
-            yesBtn.style.top = Math.random() * 100 + 'px';
-            yesBtn.style.left = Math.random() * 100 + 'px';
-        });
-    </script>
+    // Optional: move "Yes" randomly on hover
+    const yesBtn = document.getElementById("yes");
+    yesBtn.addEventListener("mouseover", () => {
+      yesBtn.style.position = "absolute";
+      const x = Math.random() * (window.innerWidth - 100);
+      const y = Math.random() * (window.innerHeight - 100);
+      yesBtn.style.left = `${x}px`;
+      yesBtn.style.top = `${y}px`;
+    });
+  </script>
 </body>
 </html>
